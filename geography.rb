@@ -9,31 +9,48 @@ class Place
 	end
 
 	def explore_place
+		# Exploring a place consist in checking whether 
+		# a monster or a coin are in the room and interact with
+		# them
 		puts ENTERING_IN_NEW_ROOM % @label
-		# TODO: Look for monsters
-		# TODO: Look for coins
-		# TODO: Print standard question
+		possible_monster = @coordinator.monster_ask(self)
+		if !possible_monster.nil?
+			possible_monster.interact
+		end
+		possible_coin = @coordinator.coin_ask(self)
+		if !possible_coin.nil?	
+			possible_coin.interact
+		end
+
 	end
 
 	def ask_for_door
+		# We ask for the door that has to be used
 		puts CHOOSE_A_DOOR
 		print INPUT
-		door_integer = $stdin.gets.chomp.to_i
-		check_door_number(door_integer)
-		map_door_to_ordinal(door_integer)
+		door = $stdin.gets.chomp
+		door_checked = check_change_door_number(door)
+		map_door_to_direction(door_checked)
 	end
 
 	private
 
-	def check_door_number(door_number)
-		if !(0 <= door_number) && !(door_number<= 3)
+	def check_change_door_number(door_number)
+		# A valid door is only one contained in the DIRECTION_MAP Hash
+		# Otherwise ask for a new one
+		
+		if  !DIRECTION_MAP.key?(door_number)
 			puts DOOR_ERROR 
 			print INPUT
-			check_door_number( $stdin.gets.chomp)
+			door_new = check_change_door_number( $stdin.gets.chomp)
+		else
+			return door_number
 		end
 	end
 
-	def map_door_to_ordinal(door_number)
+	def map_door_to_direction(door_number)
+		# The door are mapped with the direction used by the graph
+		# and set in the default file
 		DIRECTION_MAP[ door_number ] 
 	end
 
@@ -42,6 +59,8 @@ end
 class Abyss < Place
 	
 	def explore_place
+		# The Abyss is a particular place where
+		# it possible only to die (in an horrible way)
 		puts ABYSS_DEATH
 		exit(0)
 		# TODO add reload option

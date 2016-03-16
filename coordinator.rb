@@ -1,28 +1,62 @@
 require_relative "schema"
 require_relative "geography"
 require_relative "default"
+require_relative "elements"
 
 class GameCoordinator
 
 	def initialize
+		# The coordinator containes all the component of the game
+		# here initialized
 		@map = PrimitiveGraph.new
 		@geography = FloorGeography.new(self)
+		@elements_manager = ElementsManager.new(self)
 		Schema.setup_schema(@map)
 		build_places_allocation
+		@coins_collected = 0
 	end
 
 	def start_game
 		# Pick randomically the first room and start the game.
+		# The game goes on until death (monster or abyss) or 
+		# all coins are collected
 		place = @geography.get_place(ROOM_NAMES.at(Random.rand(6)))	
 
-		while @game_over != true 
+		while game_over? != true 
 			place.explore_place
 			direction = place.ask_for_door
 			place = move_to_next_place(place, direction)
 		end
+		puts CONGRATS
+	end
+	
+	def monster_ask(place)
+		# get the Monster from the element manager (nil in case)
+		@elements_manager.monster_get(place.label.to_s)
+	end
+
+	def coin_ask(place)
+		# get the coin from the element manager (nil in case)
+		@elements_manager.coin_get(place.label.to_s)
+	end
+
+	def coin_collected
+		# when a new coin is collected we increase the counter and check if the game
+		# is over
+		@coins_collected += 1
+		if game_over?
+			puts CONGRATS
+			exit(0)
+		end
 	end
 
 	private
+
+	def game_over?
+		# Apart from death, the game is over when all coins
+		# are collected
+		@coins_collected == COINS_NUMBER
+	end
 	
 	def move_to_next_place(current_place, door)
 		# In order to retrieve the next place where to move, we have 
